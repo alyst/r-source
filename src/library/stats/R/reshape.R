@@ -121,7 +121,7 @@ reshape <-
             if (is.character(drop)) drop <- names(data) %in% drop
             data <- data[, if (is.logical(drop)) !drop else -drop, drop = FALSE]
         }
-        undoInfo <- list(v.names = v.names,  timevar = timevar,idvar = idvar)
+        undoInfo <- list(v.names = v.names, timevar = timevar, idvar = idvar)
 
         orig.idvar <- idvar
         if (length(idvar) > 1L) {
