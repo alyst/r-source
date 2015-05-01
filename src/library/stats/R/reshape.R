@@ -215,13 +215,34 @@ reshape <-
        {
            if (missing(varying)) {
                back <- attr(data,"reshapeWide")
-               if (is.null(back))
-                   stop("no 'reshapeWide' attribute, must specify 'varying'")
-               varying <- back$varying
-               idvar <- back$idvar
-               timevar <- back$timevar
-               v.names <- back$v.names
-               times <- back$times
+               if (is.null(back)) {
+                   if(!missing(v.names)) {
+                       # guess varying
+                       if ( sep == '' ) {
+                           stop("unable to guess 'varying' from 'v.names': 'sep' not specified")
+                       } else if (!missing(times)) {
+                           varying <- lapply( v.names, paste0, sep, times )
+                           names(varying) <- v.names
+                       } else {
+                           # guess varying and times
+                           varying <- lapply( paste0(v.names,sep), function(colprefix) {
+                               colnames(data)[ substring( colnames(data), 1L, nchar(colprefix) ) == colprefix ]
+                           } )
+                           names(varying) <- v.names
+                           times <- unique( unlist( lapply( v.names, function(v.name) {
+                               substring( varying[[v.name]], nchar(v.name)+nchar(sep)+1L )
+                           } ) ) )
+                       }
+                   } else {
+                       stop("no 'reshapeWide' attribute, must specify 'varying' or 'v.names'")
+                   }
+               } else {
+                   varying <- back$varying
+                   idvar <- back$idvar
+                   timevar <- back$timevar
+                   v.names <- back$v.names
+                   times <- back$times
+               }
            }
 
            if (is.matrix(varying)) {
