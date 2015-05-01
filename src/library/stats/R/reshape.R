@@ -46,9 +46,9 @@ reshape <-
             stop("failed to guess time-varying variables from their names")
 
 
-        vn <- unique(nn[,1])
-        v.names <- split(nms, factor(nn[, 1L], levels = vn))
-        times <- unique(nn[, 2L])
+        vn <- unique(nn[[1L]])
+        v.names <- split(nms, factor(nn[[1L]], levels = vn))
+        times <- unique(nn[[2L]])
         attr(v.names,"v.names") <- vn
         tt <- tryCatch(as.numeric(times), warning = function(w) times)
         attr(v.names,"times") <- tt
@@ -90,13 +90,13 @@ reshape <-
             d <- data
             all.varying <- unlist(varying)
             d <- d[,!(names(data) %in% all.varying), drop = FALSE]
-            d[,timevar] <- times[1L]
+            d[,timevar] <- times[[1L]]
 
             if (is.null(v.names))
-                v.names <- unlist(lapply(varying, function(x) x[1L]))
+                v.names <- sapply(varying, function(x) x[[1L]])
 
             for(i in seq_along(v.names))
-                d[, v.names[i]] <- data[, varying[[i]][1L] ]
+                d[, v.names[[i]] ] <- data[[ varying[[i]][[1L]] ]]
 
             if (!(idvar %in% names(data))) d[, idvar] <- ids
 
@@ -107,17 +107,17 @@ reshape <-
                 return(rval)
             }
             if (is.null(new.row.names))
-                row.names(rval) <- paste(d[, idvar], times[1L], sep = ".")
+                row.names(rval) <- paste(d[[idvar]], times[[1L]], sep = ".")
             else
                 row.names(rval) <- new.row.names[1L:NROW(rval)]
 
             for(i in 2L:length(times)) {
-                d[,timevar] <- times[i]
+                d[, timevar] <- times[[i]]
                 for(j in seq_along(v.names))
-                    d[, v.names[j]] <- data[, varying[[j]][i]]
+                    d[, v.names[[j]] ] <- data[[ varying[[j]][[i]] ]]
 
                 if (is.null(new.row.names))
-                    row.names(d) <- paste(d[, idvar], times[i], sep = ".")
+                    row.names(d) <- paste(d[[idvar]], times[[i]], sep = ".")
                 else
                     row.names(d) <- new.row.names[NROW(rval) + 1L:NROW(d)]
                 rval <- rbind(rval, d) ##inefficient. So sue me.
@@ -150,9 +150,9 @@ reshape <-
             drop.idvar <- TRUE
         } else drop.idvar <- FALSE
 
-        ## times <- sort(unique(data[,timevar]))
+        ## times <- sort(unique(data[[timevar]]))
         ## varying and times must have the same order
-        times <- unique(data[, timevar])
+        times <- unique(data[[timevar]])
         if (anyNA(times))
             warning("there are records with missing times, which will be dropped.")
         undoInfo$times <- times
@@ -168,7 +168,7 @@ reshape <-
         keep <- !(names(data) %in% c(timevar, v.names, idvar, orig.idvar))
         if(any(keep)) {
             rval <- data[keep]
-            tmp <- data[, idvar]
+            tmp <- data[[idvar]]
             really.constant <-
                 unlist(lapply(rval,
                               function(a) all(tapply(a, as.vector(tmp),
@@ -178,17 +178,17 @@ reshape <-
                                  paste(names(rval)[!really.constant],collapse = ",")), domain = NA)
         }
 
-        rval <- data[!duplicated(data[, idvar]),
+        rval <- data[!duplicated(data[[idvar]]),
                      !(names(data) %in% c(timevar, v.names)), drop = FALSE]
 
         for(i in seq_along(times)) {
-            thistime <- data[data[, timevar] %in% times[i], ]
-            tab <- table(thistime[, idvar])
+            thistime <- data[data[[timevar]] %in% times[[i]], ]
+            tab <- table(thistime[[idvar]])
             if (any(tab > 1L))
                 warning(sprintf("multiple rows match for %s=%s: first taken",
-                                timevar, times[i]), domain = NA)
-            rval[, varying[, i]] <-
-                thistime[match(rval[, idvar], thistime[, idvar]), v.names]
+                                timevar, times[[i]]), domain = NA)
+            rval[, varying[[i]] ] <-
+                thistime[match(rval[[idvar]], thistime[[idvar]]), v.names]
         }
 
         if (!is.null(new.row.names)) row.names(rval) <- new.row.names
