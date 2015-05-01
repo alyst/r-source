@@ -63,7 +63,7 @@ reshape <-
             ll <- unlist(lapply(varying,length))
             if (any(ll != ll[1L]))
                 stop("'varying' arguments must be the same length")
-            if (ll[1L] != length(times)) stop("'times' is wrong length")
+            if (ll[1L] != length(times)) stop("The length of 'varying' arguments must match the 'times' length")
 
             if (!is.null(drop)) {
                 if (is.character(drop))
