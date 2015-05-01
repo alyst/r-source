@@ -90,38 +90,22 @@ reshape <-
             d <- data
             all.varying <- unlist(varying)
             d <- d[,!(names(data) %in% all.varying), drop = FALSE]
-            d[,timevar] <- times[[1L]]
 
             if (is.null(v.names))
                 v.names <- sapply(varying, function(x) x[[1L]])
 
-            for(i in seq_along(v.names))
-                d[, v.names[[i]] ] <- data[[ varying[[i]][[1L]] ]]
-
             if (!(idvar %in% names(data))) d[, idvar] <- ids
 
-            rval <- d
-
-            if (length(times) == 1L) {
-                if (drop.idvar) rval[, idvar] <- NULL
-                return(rval)
-            }
-            if (is.null(new.row.names))
-                row.names(rval) <- paste(d[[idvar]], times[[1L]], sep = ".")
-            else
-                row.names(rval) <- new.row.names[1L:NROW(rval)]
-
-            for(i in 2L:length(times)) {
+            rval <- do.call( rbind, lapply( seq_along(times), function(i) {
                 d[, timevar] <- times[[i]]
-                for(j in seq_along(v.names))
-                    d[, v.names[[j]] ] <- data[[ varying[[j]][[i]] ]]
+                d[, v.names] <- data[, sapply(varying, function(x) x[[i]] )]
 
                 if (is.null(new.row.names))
                     row.names(d) <- paste(d[[idvar]], times[[i]], sep = ".")
                 else
-                    row.names(d) <- new.row.names[NROW(rval) + 1L:NROW(d)]
-                rval <- rbind(rval, d) ##inefficient. So sue me.
-            }
+                    row.names(d) <- new.row.names[(i-1L)*NROW(d) + 1L:NROW(d)]
+                d
+            } ) )
 
             ## if we created a temporary id variable, drop it
             if (drop.idvar) rval[, idvar] <- NULL
